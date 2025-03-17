@@ -55,17 +55,9 @@ public class Vision
   public static final AprilTagFieldLayout fieldLayout                     = AprilTagFieldLayout.loadField(
       AprilTagFields.k2025ReefscapeAndyMark);
   /**
-   * Ambiguity defined as a value between (0,1). Used in {@link Vision#filterPose}.
-   */
-  private final       double              maximumAmbiguity                = 0.25;
-  /**
    * Photon Vision Simulation
    */
   public              VisionSystemSim     visionSim;
-  /**
-   * Count of times that the odom thinks we're more than 10meters away from the april tag.
-   */
-  private             double              longDistangePoseEstimationCount = 0;
   /**
    * Current pose from the pose estimator using wheel odometry.
    */
@@ -190,6 +182,7 @@ public class Vision
    * @param pose Estimated robot pose.
    * @return Could be empty if there isn't a good reading.
    */
+  /* 
   @Deprecated(since = "2024", forRemoval = true)
   private Optional<EstimatedRobotPose> filterPose(Optional<EstimatedRobotPose> pose)
   {
@@ -635,3 +628,4 @@ public class Vision
   }
 
 }
+ 

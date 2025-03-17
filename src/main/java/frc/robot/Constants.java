@@ -37,15 +37,31 @@ public final class Constants
 
     // Hold time on motor brakes when disabled
     public static final double WHEEL_LOCK_TIME = 10; // seconds
+
+    public static final int FL_DIO_CHANNEL = 0;
+    public static final int FR_DIO_CHANNEL = 3;
+    public static final int BL_DIO_CHANNEL = 1;
+    public static final int BR_DIO_CHANNEL = 2;
   }
 
   public static class OperatorConstants
   {
 
-    // Joystick Deadband
-    public static final double DEADBAND        = 0.1;
-    public static final double LEFT_Y_DEADBAND = 0.1;
-    public static final double RIGHT_X_DEADBAND = 0.1;
-    public static final double TURN_CONSTANT    = 6;
+    // SPARK MAX CAN IDs
+    // intake
+    public static final int kIntakeTopMotorCanId = 13;
+    public static final int kIntakeBottomMotorCanId = 12;
+
+    public static final int kFlipperMotor = 9;
+    
+    public static final int kClimber1Motor = 6;
+    public static final int kClimber2Motor = 7;
+
+    // elevator
+    public static final int kelevatorMotor = 5;
+    public static final int kElevatorFollowerCanId = 5;
+    public static final int kElevatorLeaderCanId = 4;
+    public static final double DEADBAND = 0.2;
+    public static final double TURN_CONSTANT = 0;
   }
 }

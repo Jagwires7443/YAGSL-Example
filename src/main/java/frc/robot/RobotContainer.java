@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -14,12 +15,17 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import frc.robot.subsystems.swervedrive.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.swervedrive.subsystems.Intake;
+
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -30,6 +36,7 @@ import swervelib.SwerveInputStream;
  */
 public class RobotContainer
 {
+  SendableChooser<Command> autoChooser;
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   final         CommandXboxController driverXbox = new CommandXboxController(0);
@@ -37,6 +44,9 @@ public class RobotContainer
   private final SwerveSubsystem       drivebase  = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
                                                                                 "swerve/neo"));
 
+                                                                                
+  private Intake intake = new Intake();
+  private ElevatorSubsystem elevator = new ElevatorSubsystem();
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
    */
@@ -93,12 +103,16 @@ public class RobotContainer
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
+  
   public RobotContainer()
   {
     // Configure the trigger bindings
     configureBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
+
+    autoChooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Chooser", autoChooser);
   }
 
   /**
@@ -110,6 +124,16 @@ public class RobotContainer
    */
   private void configureBindings()
   {
+
+    driverXbox.rightBumper()
+    .whileTrue(intake.setIntakeSpeed(0.5));
+     
+    driverXbox.leftTrigger()
+    .whileTrue(elevator.setElevatorSpeed(0.5));
+
+    driverXbox.leftTrigger()
+    .whileFalse(elevator.killElevator);
+    
     Command driveFieldOrientedDirectAngle      = drivebase.driveFieldOriented(driveDirectAngle);
     Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
     Command driveRobotOrientedAngularVelocity  = drivebase.driveFieldOriented(driveRobotOriented);
@@ -185,7 +209,7 @@ public class RobotContainer
   public Command getAutonomousCommand()
   {
     // An example command will be run in autonomous
-    return drivebase.getAutonomousCommand("New Auto");
+    return autoChooser.getSelected();
   }
 
   public void setMotorBrake(boolean brake)

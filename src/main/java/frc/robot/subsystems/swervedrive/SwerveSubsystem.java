@@ -6,6 +6,17 @@ package frc.robot.subsystems.swervedrive;
 
 import static edu.wpi.first.units.Units.Meter;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
+import org.json.simple.parser.ParseException;
+import org.photonvision.targeting.PhotonPipelineResult;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
@@ -17,6 +28,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
+
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -25,6 +37,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -34,15 +47,6 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.subsystems.swervedrive.Vision.Cameras;
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-import org.json.simple.parser.ParseException;
-import org.photonvision.targeting.PhotonPipelineResult;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
@@ -74,6 +78,12 @@ public class SwerveSubsystem extends SubsystemBase
    *
    * @param directory Directory of swerve drive config files.
    */
+
+  private DigitalInput flDIO; 
+  private DigitalInput frDIO; 
+  private DigitalInput blDIO; 
+  private DigitalInput brDIO; 
+
   public SwerveSubsystem(File directory)
   {
     boolean blueAlliance = false;
@@ -110,6 +120,11 @@ public class SwerveSubsystem extends SubsystemBase
     }
     setupPathPlanner();
     RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyro));
+
+    // flDIO = new DigitalInput(DrivebaseConstants.FL_DIO_CHANNEL);
+    // frDIO = new DigitalInput(DrivebaseConstants.FR_DIO_CHANNEL);
+    // blDIO = new DigitalInput(DrivebaseConstants.BL_DIO_CHANNEL);
+    // brDIO = new DigitalInput(DrivebaseConstants.BR_DIO_CHANNEL);
   }
 
   /**
@@ -144,6 +159,12 @@ public class SwerveSubsystem extends SubsystemBase
       swerveDrive.updateOdometry();
       vision.updatePoseEstimation(swerveDrive);
     }
+    
+    // SmartDashboard.putBoolean("FL Turn Val", flDIO.get());
+    // SmartDashboard.putBoolean("FR Turn Val", frDIO.get());
+    // SmartDashboard.putBoolean("BL Turn Val", blDIO.get());
+    // SmartDashboard.putBoolean("BR Turn Val", frDIO.get());
+
   }
 
   @Override
