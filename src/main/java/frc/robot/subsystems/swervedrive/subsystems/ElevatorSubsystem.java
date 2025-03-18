@@ -20,7 +20,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Timer;
-
+ 
 public class ElevatorSubsystem extends SubsystemBase {
     // Leader motor.
     public static final SparkFlex elevatorMotor = new SparkFlex(Constants.OperatorConstants.kElevatorLeaderCanId, MotorType.kBrushless);
@@ -148,17 +148,19 @@ public class ElevatorSubsystem extends SubsystemBase {
             followerMotor.set(leaderCommand);
         }
     }
-
+     public void setSpeed(double speed){
+        followerMotor.set(speed);
+        elevatorMotor.set(-speed);
+     }
     public Command setElevatorSpeed(double speed) {
             motionProfile = null;
         if ((forwardLimitSwitch.isPressed() && speed > 0) ||
             (reverseLimitSwitch.isPressed() && speed < 0)) {
-            stopElevator();
+           return this.run(() -> stopElevator());
         } else {
-            elevatorMotor.set(speed);
-            followerMotor.set(speed);
+            return this.run(() -> setSpeed(speed));
         }
-                return null;
+                
     }
 
     public void stopElevator() {
@@ -231,3 +233,4 @@ public class ElevatorSubsystem extends SubsystemBase {
         return elevatorEncoder.getVelocity();
     }
 }
+    

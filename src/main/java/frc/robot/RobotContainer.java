@@ -24,6 +24,9 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.swervedrive.subsystems.ElevatorSubsystem;
+/* 
+import frc.robot.subsystems.swervedrive.subsystems.ElevatorSubsystem;
+*/
 import frc.robot.subsystems.swervedrive.subsystems.Intake;
 
 import java.io.File;
@@ -126,13 +129,16 @@ public class RobotContainer
   {
 
     driverXbox.rightBumper()
-    .whileTrue(intake.setIntakeSpeed(0.5));
+    .whileTrue(intake.setIntakeSpeed(0.25));
+    driverXbox.rightBumper()
+    .whileFalse(intake.setIntakeSpeed(0.0));
      
+     driverXbox.leftTrigger()
+    .whileTrue(elevator.setElevatorSpeed(0.2));
     driverXbox.leftTrigger()
-    .whileTrue(elevator.setElevatorSpeed(0.5));
+    .whileFalse(elevator.setElevatorSpeed(0.0));
 
-    driverXbox.leftTrigger()
-    .whileFalse(elevator.killElevator);
+    
     
     Command driveFieldOrientedDirectAngle      = drivebase.driveFieldOriented(driveDirectAngle);
     Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);

@@ -58,9 +58,11 @@ public final class Constants
     public static final int kClimber2Motor = 7;
 
     // elevator
-    public static final int kelevatorMotor = 5;
-    public static final int kElevatorFollowerCanId = 5;
-    public static final int kElevatorLeaderCanId = 4;
+    public static final int kElevatorFollowerCanId = 10;
+    public static final int kElevatorLeaderCanId = 11;
+   
+    //public static final int kElevatorFollowerCanId = 5;
+    //public static final int kElevatorLeaderCanId = 4;
     public static final double DEADBAND = 0.2;
     public static final double TURN_CONSTANT = 0;
   }
