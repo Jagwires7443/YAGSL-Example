@@ -2,6 +2,7 @@ package frc.robot.subsystems.swervedrive.subsystems;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 //import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -26,6 +27,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final SparkFlex elevatorMotor = new SparkFlex(Constants.OperatorConstants.kElevatorLeaderCanId, MotorType.kBrushless);
     public static final SparkClosedLoopController controller = elevatorMotor.getClosedLoopController();
     private final RelativeEncoder elevatorEncoder = elevatorMotor.getEncoder();
+    
+  
+    public static final double POSITION_BOTTOM = 0.0;
+    public static final double POSITION_TOP = 30.0;
 
     // Follower motor.
     public static final SparkFlex followerMotor = new SparkFlex(Constants.OperatorConstants.kElevatorFollowerCanId, MotorType.kBrushless);
@@ -75,6 +80,8 @@ public class ElevatorSubsystem extends SubsystemBase {
         elevatorEncoder.setPosition(0);
         profileTimer.reset();
         profileTimer.start();
+        // Configure the encoder
+
 
         // Build leader motor configuration.
         EncoderConfig encoderConfig = new EncoderConfig()
@@ -152,6 +159,15 @@ public class ElevatorSubsystem extends SubsystemBase {
         followerMotor.set(speed);
         elevatorMotor.set(-speed);
      }
+     public Command setElevatorPosition(double position) {
+        elevatorMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
+        if (position < POSITION_BOTTOM || position > POSITION_TOP) {
+            System.out.println("Position out of bounds!");
+            
+        }
+    elevatorMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
+        return killElevator;
+}
     public Command setElevatorSpeed(double speed) {
             motionProfile = null;
         if ((forwardLimitSwitch.isPressed() && speed > 0) ||
@@ -212,8 +228,8 @@ public class ElevatorSubsystem extends SubsystemBase {
         );
     }
 
-    public void returnToPreviousPosition() {
-        setHeight(previousPosition);
+    public Command returnToPreviousPosition() {
+        return new InstantCommand(() -> setHeight(previousPosition), this);
     }
 
     public void killElevator() {
@@ -232,5 +248,22 @@ public class ElevatorSubsystem extends SubsystemBase {
     public double getVelocity() {
         return elevatorEncoder.getVelocity();
     }
+      //PRESET POSITIONS
+    //These preset positions are not final and will be changed! Use with care!
+    //I am assuming that the conversion is in rotations. Example: 1 rotation = 1 unit
+ public Command POSITION_L1() {
+    return setElevatorPosition(10.0); //Replace 10.0 with the desired position
+ }
+    public Command POSITION_L2() {
+        return setElevatorPosition(20.0); //Replace 20.0 with the desired position
+    }
+    public Command POSITION_L3() {
+        return setElevatorPosition(30.0); //Replace 30.0 with the desired position
+    }
+    public Command POSITION_L4() {
+        return setElevatorPosition(40.0); //Replace 40.0 with the desired position
+    }
 }
+   
+
     
