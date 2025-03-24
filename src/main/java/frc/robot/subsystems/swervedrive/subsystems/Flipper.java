@@ -59,7 +59,7 @@ public class Flipper extends SubsystemBase {
 //Method to move the flipper to a specific position
 public Command setFlipperPosition(double position){
     flipperMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
-        return null;
+    return this.run(() -> setFlipperPosition(position));
 }
 
 public Command stopArm() {

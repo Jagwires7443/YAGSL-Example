@@ -145,13 +145,13 @@ public class RobotContainer
     driverXbox.rightBumper()
     .whileFalse(intake.setIntakeSpeed(0.0));
 
-    driverXbox.a()
-    .whileTrue(climber.setSpeed(0.5))
-    .whileFalse(climber.setSpeed(0.0));
+    //driverXbox.a()
+    //.whileTrue(climber.setSpeed(0.5))
+    //.whileFalse(climber.setSpeed(0.0));
 
-    driverXbox.b()
-    .whileTrue (climber.ReverseClimber())
-    .whileFalse(climber.setSpeed(0.0));
+    //driverXbox.b()
+    //.whileTrue (climber.ReverseClimber())
+    //.whileFalse(climber.setSpeed(0.0));
  
     //Preset elevator positions
 

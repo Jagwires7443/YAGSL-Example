@@ -34,7 +34,8 @@ public class Climber extends SubsystemBase {
     public Command setSpeed(double speed) {
         climberMotor1.set(speed);
         climberMotor2.set(-speed);
-     return this.run(() -> setSpeed(speed));
+        return this.run(() -> setSpeed(speed));
+     
     }
     public Command ReverseClimber() {
         return this.run(() -> setSpeed(-1));
