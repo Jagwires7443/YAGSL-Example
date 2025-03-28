@@ -23,13 +23,15 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.swervedrive.subsystems.Climber;
 import frc.robot.subsystems.swervedrive.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.swervedrive.subsystems.Flipper;
+import frc.robot.subsystems.swervedrive.subsystems.HoldAndReturnCommand;
+import frc.robot.subsystems.swervedrive.subsystems.HoldAndReturnFlipperCommand;
 /* 
 import frc.robot.subsystems.swervedrive.subsystems.ElevatorSubsystem;
 */
@@ -52,12 +54,23 @@ public class RobotContainer
   final         CommandXboxController driverXbox = new CommandXboxController(0);
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem       drivebase  = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
-                                                                                "swerve/neo"));
-                                                                          
+                                 "swerve/neo"));
+                                     
+                                                                                
   private Intake intake = new Intake();
   private ElevatorSubsystem elevator = new ElevatorSubsystem();
   private Flipper flipper = new Flipper();
   private Climber climber = new Climber();
+  CommandGenericHID cycontroller = new CommandGenericHID(1);
+
+  HoldAndReturnCommand POSITION_L4 = new HoldAndReturnCommand(elevator, 72);
+  HoldAndReturnCommand POSITION_L3 = new HoldAndReturnCommand(elevator, 47.5);
+  HoldAndReturnCommand POSITION_L2 = new HoldAndReturnCommand(elevator, 31.7);
+  HoldAndReturnCommand POSITION_L1 = new HoldAndReturnCommand(elevator, 18);
+
+  HoldAndReturnFlipperCommand FLIPPER_POSITION_CORAL = new HoldAndReturnFlipperCommand(flipper, 0.6);
+  HoldAndReturnFlipperCommand FLIPPER_POSITION_STOW = new HoldAndReturnFlipperCommand(flipper, 0);
+
   
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
@@ -127,7 +140,18 @@ public class RobotContainer
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
     new Trigger(intake::isBeamBroken)
-    .onTrue(new RunIntakeCommand(intake, 0.8, 0.6));
+    .onTrue(new RunIntakeCommand(intake, 0.0, 0.5));
+
+    NamedCommands.registerCommand("CoralPosition", flipper.POSITION_CORAL());
+    NamedCommands.registerCommand("StowPosition", flipper.POSITION_STOW());
+    NamedCommands.registerCommand("SetIntakeSpeed", intake.setIntakeSpeed(0.8));
+    NamedCommands.registerCommand("SetElevatorPosition", POSITION_L1);
+    NamedCommands.registerCommand("SetElevatorPosition", POSITION_L2);
+    NamedCommands.registerCommand("SetElevatorPosition", POSITION_L3);
+    NamedCommands.registerCommand("SetElevatorPosition", POSITION_L4);
+    NamedCommands.registerCommand("SetClimberSpeed", climber.setSpeed(0.09));
+    NamedCommands.registerCommand("ReverseClimber", climber.ReverseClimber());
+
   }
 
   /**
@@ -144,38 +168,31 @@ public class RobotContainer
     .whileTrue(intake.setIntakeSpeed(0.25));
     driverXbox.rightBumper()
     .whileFalse(intake.setIntakeSpeed(0.0));
+    driverXbox.a()
+    .whileTrue(climber.setSpeed(0.09))
+    .whileFalse(climber.setSpeed(0.0));
 
-    //driverXbox.a()
-    //.whileTrue(climber.setSpeed(0.5))
-    //.whileFalse(climber.setSpeed(0.0));
-
-    //driverXbox.b()
-    //.whileTrue (climber.ReverseClimber())
-    //.whileFalse(climber.setSpeed(0.0));
+    driverXbox.b()
+    .whileTrue (climber.ReverseClimber())
+    .whileFalse(climber.setSpeed(0.0));
  
     //Preset elevator positions
 
-  CommandGenericHID.class.cast(driverXbox).button(16)
-    .whileTrue(elevator.POSITION_L1());
- 
+    new Trigger(intake::isBeamBroken)
+    .onTrue(new RunIntakeCommand(intake, 0.8, 0.7));
 
-  CommandGenericHID.class.cast(driverXbox).button(5)
-  .whileTrue(elevator.POSITION_L2());
- 
-
-  CommandGenericHID.class.cast(driverXbox).button(10)
-  .whileTrue(elevator.POSITION_L3());
-  
-
-  CommandGenericHID.class.cast(driverXbox).button(11)
-  .whileTrue(elevator.POSITION_L4());
-
+    cycontroller.button(16).whileTrue(POSITION_L1); // Button 16 -> Position L1
+    cycontroller.button(15).whileTrue(POSITION_L2); // Button 15 -> Position L2
+    cycontroller.button(14).whileTrue(POSITION_L3); // Button 14 -> Position L3
+    cycontroller.button(13).whileTrue(POSITION_L4); // Button 13 -> Position L4
 
   //Preset flipper positions
     driverXbox.x()
-    .whileTrue(flipper.POSITION_STOW());
+    .whileTrue(flipper.POSITION_STOW())
+    .whileFalse(flipper.stopArm());
     driverXbox.y()
-    .whileTrue(flipper.POSITION_CORAL());
+    .whileTrue(flipper.POSITION_CORAL())
+    .whileFalse(flipper.stopArm());
 
 
 

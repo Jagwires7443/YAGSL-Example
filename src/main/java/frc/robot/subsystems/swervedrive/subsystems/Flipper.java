@@ -1,4 +1,3 @@
-
 package frc.robot.subsystems.swervedrive.subsystems;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -8,12 +7,20 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.spark.config.EncoderConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.SparkBase;
 
 public class Flipper extends SubsystemBase {
 
     private final SparkFlex flipperMotor;
     private final AbsoluteEncoder flipperEncoder;
+
+     double kP = 2.0;
+     double kI = 0;
+     double k = 0.0;
+     double gF = 10.0;
+     double kV = 19.0;
+     double kFF = 0.9;
 
     public double getFlipperPosition() {
     return flipperEncoder.getPosition();
@@ -22,19 +29,17 @@ public class Flipper extends SubsystemBase {
     public Flipper() {
         flipperMotor = new SparkFlex(9, MotorType.kBrushless);
         flipperEncoder = flipperMotor.getAbsoluteEncoder();
-  
-    
+        SparkFlexConfig flipperConfig = new SparkFlexConfig();
+   
+        double currentPosition = flipperEncoder.getPosition();
+        flipperMotor.getClosedLoopController().setReference(currentPosition, SparkBase.ControlType.kPosition);
+        
       }
 
+    public static final double POSITION_STOW = -10; //Placeholder, needs configuring!
+    public static final double POSITION_CORAL = 30; // Placeholder, needs configuring!
 
-    // Constants for arm control
-    private static final double kP = 0.1;
-    private static final double kI = 0.0;
-    private static final double kD = 0.0;
-    private static final double kPositionConversionFactor = 1.0;
-
-    public static final double POSITION_STOW = 0.0;
-    public static final double POSITION_CORAL = 50.0; // Placeholder, needs configuring!
+    
 
     public void periodic() {
         // Get the current position and velocity from the encoder
@@ -44,6 +49,20 @@ public class Flipper extends SubsystemBase {
         // Display the current position and velocity on the SmartDashboard
         SmartDashboard.putNumber("Current Position", currentPosition);
         SmartDashboard.putNumber("Current Velocity", currentVelocity);
+        SmartDashboard.putNumber("Flipper Position", flipperEncoder.getPosition());
+        SmartDashboard.putNumber("Flipper volts", flipperMotor.getAppliedOutput());
+        SmartDashboard.putNumber("Flipper currents", flipperMotor.getOutputCurrent());
+        SmartDashboard.putNumber("Flipper Motor Output", flipperMotor.getAppliedOutput());
+        SmartDashboard.putNumber("Flipper Encoder Position", flipperEncoder.getPosition());
+        
+        double targetPosition = POSITION_CORAL; // Example: Use a predefined target position
+     
+        //if (currentPosition < targetPosition) {
+           // flipperMotor.set(0.5); // Move up
+       // } else {
+            //flipperMotor.set(0); // Stop
+       // }
+            
     }
     public Flipper(int motorID) {
         //Initialize the Sparkflex motor
@@ -52,18 +71,21 @@ public class Flipper extends SubsystemBase {
     //Initialize the encoder
     flipperEncoder = flipperMotor.getAbsoluteEncoder();
 
-    //Optionally configure the encoder
-    EncoderConfig encoderConfig = new EncoderConfig()
-    .positionConversionFactor(kPositionConversionFactor * 360.0);} // Example: 1 rotation = 360 degrees
+
+    }
+    public double setFlipperPosition() {
+        return flipperEncoder.getPosition() * 360;
+    }
+   
     
 //Method to move the flipper to a specific position
-public Command setFlipperPosition(double position){
-    flipperMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
-    return this.run(() -> setFlipperPosition(position));
+public Command setFlipperPosition(double position) {
+    return new InstantCommand(() -> {
+        flipperMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
+    }, this);
 }
 
 public Command stopArm() {
-    flipperMotor.stopMotor();
     return new InstantCommand(() -> flipperMotor.stopMotor(), this);
 }
 public Command POSITION_STOW() {
@@ -73,4 +95,3 @@ public Command POSITION_CORAL() {
     return setFlipperPosition(POSITION_CORAL);
 }
 }
-

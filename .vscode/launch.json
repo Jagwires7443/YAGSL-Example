@@ -6,6 +6,19 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Launch Current File",
+      "request": "launch",
+      "mainClass": "${file}"
+    },
+    {
+      "type": "java",
+      "name": "Attach to Remote Program",
+      "request": "attach",
+      "hostName": "<The host name or ip address of remote debuggee>",
+      "port": "<debug port of remote debuggee>"
+    },
+    {
+      "type": "java",
       "name": "Main",
       "request": "launch",
       "mainClass": "frc.robot.Main",

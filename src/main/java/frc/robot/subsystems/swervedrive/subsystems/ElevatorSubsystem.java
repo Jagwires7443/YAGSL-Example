@@ -24,16 +24,25 @@ import edu.wpi.first.wpilibj.Timer;
  
 public class ElevatorSubsystem extends SubsystemBase {
     // Leader motor.
-    public static final SparkFlex elevatorMotor = new SparkFlex(Constants.OperatorConstants.kElevatorLeaderCanId, MotorType.kBrushless);
-    public static final SparkClosedLoopController controller = elevatorMotor.getClosedLoopController();
+    private SparkFlex elevatorMotor = new SparkFlex(Constants.OperatorConstants.kElevatorLeaderCanId, MotorType.kBrushless);
+    private final SparkClosedLoopController controller = elevatorMotor.getClosedLoopController();
     private final RelativeEncoder elevatorEncoder = elevatorMotor.getEncoder();
-    
   
-    public static final double POSITION_BOTTOM = 0.0;
-    public static final double POSITION_TOP = 30.0;
 
+    // Define preset positions.
+    public static final double POSITION_BOTTOM = 0.0;
+    public static final double POSITION_TOP = 73.0;
+    public static final double POSITION_L1 = 18.0;
+    public static final double POSITION_L2 = 31.7;
+    public static final double POSITION_L3 = 47.5;
+    public static final double POSITION_L4 = 72.0;
     // Follower motor.
-    public static final SparkFlex followerMotor = new SparkFlex(Constants.OperatorConstants.kElevatorFollowerCanId, MotorType.kBrushless);
+    public static SparkFlex followerMotor = new SparkFlex(Constants.OperatorConstants.kElevatorFollowerCanId, MotorType.kBrushless);
+
+    //Configure the follower motor to follow the leader motor
+   
+    
+    
 
     // Define gear ratio.
     private final double gearRatio = 50.0;
@@ -42,8 +51,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     // Free speed [in/sec]: (6784 RPM / 60) * encoderFactor.
     private final double freeSpeed = (6784.0 / 60.0) * encoderFactor;
 
-    public static final SparkLimitSwitch forwardLimitSwitch = elevatorMotor.getForwardLimitSwitch();
-    public static final SparkLimitSwitch reverseLimitSwitch = elevatorMotor.getReverseLimitSwitch();
+    public  final SparkLimitSwitch forwardLimitSwitch = elevatorMotor.getForwardLimitSwitch();
+    public  final SparkLimitSwitch reverseLimitSwitch = elevatorMotor.getReverseLimitSwitch();
 
     // Motion profile variables.
     private TrapezoidProfile motionProfile = null;
@@ -53,15 +62,15 @@ public class ElevatorSubsystem extends SubsystemBase {
     private double previousPosition;
 
     // Consolidate max velocity & acceleration
-    private double maxVel = 24.0;
+    private double maxVel = 24.5;
     private double maxAccl = 16.0;
 
     // Same with P, I, D, and gF
-    private double kP = 2.0;
+    private double kP = 2.5;
     private double kI = 0;
     private double kD = 0.0;
     private double gF = 1.0;
-    private double kV = 16.0;
+    private double kV = 18.0; // Volts per unit velocity
     public Command killElevator;
 
 
@@ -75,14 +84,15 @@ public class ElevatorSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("maxVel", maxVel);
         SmartDashboard.putNumber("maxAcc", maxAccl);
         SmartDashboard.putBoolean("Overwrite Elevator Config", false);
+
         
         // Initialize encoder and timer.
         elevatorEncoder.setPosition(0);
         profileTimer.reset();
         profileTimer.start();
         // Configure the encoder
-
-
+        
+        
         // Build leader motor configuration.
         EncoderConfig encoderConfig = new EncoderConfig()
                                         .positionConversionFactor(encoderFactor)
@@ -140,6 +150,9 @@ public class ElevatorSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Current Velocity", elevatorEncoder.getVelocity());
             SmartDashboard.putNumber("Position Error", currentState.position - elevatorEncoder.getPosition());
             SmartDashboard.putNumber("Velocity Error", currentState.velocity - elevatorEncoder.getVelocity());
+            SmartDashboard.putNumber("Elevator Motor Power", elevatorMotor.getAppliedOutput());
+            SmartDashboard.putNumber("Follower Motor Power", followerMotor.getAppliedOutput());
+    }
 
             double direction = Math.signum(currentState.velocity); // +1 for up, -1 for down, 0 for stationary
             double arbFF = (direction * gF) + (kV * (currentState.velocity / freeSpeed));
@@ -151,31 +164,31 @@ public class ElevatorSubsystem extends SubsystemBase {
                 SparkClosedLoopController.ArbFFUnits.kVoltage
             );
             // Mirror the leader's command to the follower.
-            double leaderCommand = elevatorMotor.get();
+            double leaderCommand = elevatorMotor.getAppliedOutput();
             followerMotor.set(leaderCommand);
         }
-    }
+    
      public void setSpeed(double speed){
         followerMotor.set(speed);
         elevatorMotor.set(-speed);
      }
      public Command setElevatorPosition(double position) {
-        elevatorMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
-        if (position < POSITION_BOTTOM || position > POSITION_TOP) {
-            System.out.println("Position out of bounds!");
-            
-        }
-    elevatorMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
-        return killElevator;
-}
-    public Command setElevatorSpeed(double speed) {
-            motionProfile = null;
-        if ((forwardLimitSwitch.isPressed() && speed > 0) ||
-            (reverseLimitSwitch.isPressed() && speed < 0)) {
-           return this.run(() -> stopElevator());
-        } else {
-            return this.run(() -> setSpeed(speed));
-        }
+        return this.run(() -> controller.setReference(position, SparkBase.ControlType.kPosition));
+    }
+    
+     
+         
+
+public void setElevatorSpeed(double speed) {
+    motionProfile = null;
+    if ((forwardLimitSwitch.isPressed() && speed > 0) ||
+        (reverseLimitSwitch.isPressed() && speed < 0)) {
+        stopElevator();
+    } else {
+        elevatorMotor.set(0.5);
+        followerMotor.set(0.5);
+    }
+    
                 
     }
 
@@ -192,6 +205,13 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     // Modified setHeight() method to hold at the limit switch position.
     public void setHeight(double targetHeight) {
+        // Ensure the target height is within defined bounds.
+        if (targetHeight < POSITION_BOTTOM) {
+            targetHeight = POSITION_BOTTOM;
+        } else if (targetHeight > POSITION_TOP) {
+            targetHeight = POSITION_TOP;
+        }
+    
         // If the forward limit switch is hit and the command is upward, hold the current position.
         if (forwardLimitSwitch.isPressed() && targetHeight > getHeight()) {
             targetHeight = getHeight();
@@ -252,16 +272,16 @@ public class ElevatorSubsystem extends SubsystemBase {
     //These preset positions are not final and will be changed! Use with care!
     //I am assuming that the conversion is in rotations. Example: 1 rotation = 1 unit
  public Command POSITION_L1() {
-    return setElevatorPosition(10.0); //Replace 10.0 with the desired position
+    return setElevatorPosition(POSITION_L1);
  }
     public Command POSITION_L2() {
-        return setElevatorPosition(20.0); //Replace 20.0 with the desired position
+        return setElevatorPosition(POSITION_L2); //Replace 20.0 with the desired position
     }
     public Command POSITION_L3() {
-        return setElevatorPosition(30.0); //Replace 30.0 with the desired position
+        return setElevatorPosition(POSITION_L3); //Replace 
     }
     public Command POSITION_L4() {
-        return setElevatorPosition(40.0); //Replace 40.0 with the desired position
+        return setElevatorPosition(POSITION_L4); //Replace 40.0 with the desired position
     }
 }
    

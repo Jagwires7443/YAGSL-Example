@@ -22,7 +22,7 @@ public class Intake extends SubsystemBase {
     vortex1 = new SparkFlex(12, MotorType.kBrushless);
     vortex2 = new SparkFlex(13, MotorType.kBrushless);
     //Initialize IR beam break sensor
-    beamBreakSensor = new DigitalInput (5);
+    beamBreakSensor = new DigitalInput(5);
   }
 
 
@@ -30,6 +30,9 @@ public class Intake extends SubsystemBase {
   public void periodic() {
     SmartDashboard.putNumber("vortex1 volts", vortex1.getAppliedOutput());
     SmartDashboard.putNumber("vortex1 current", vortex1.getOutputCurrent());
+    
+   // Display the beam break sensor value on the SmartDashboard
+    SmartDashboard.putBoolean("Beam Break Sensor", isBeamBroken());
   }
 
   public void setSpeed(double speed) {
@@ -37,9 +40,11 @@ public class Intake extends SubsystemBase {
     vortex2.set(-speed);
     System.out.println(vortex1.getAppliedOutput());
   }
-  public void stopMotors() {
-    vortex1.set(0);
-    vortex2.set(0);
+  public Command stopMotors() {
+    return this.run(() -> {
+      vortex1.set(0);
+      vortex2.set(0);
+    });
   }
   public Command setIntakeSpeed(double speed) {
     return this.run(() -> setSpeed(speed));
@@ -47,6 +52,7 @@ public class Intake extends SubsystemBase {
   //Method to check if the beam is broken
   public boolean isBeamBroken(){
     return !beamBreakSensor.get(); //Assuming 'false' means that the beam is broken
-  }
+ 
+}
 }
 

@@ -18,6 +18,8 @@ public class Climber extends SubsystemBase {
 
         climberMotor1 = new SparkFlex(14, MotorType.kBrushless);
         climberMotor2 = new SparkFlex(15, MotorType.kBrushless);
+        
+      
     }
 
 
@@ -38,7 +40,7 @@ public class Climber extends SubsystemBase {
      
     }
     public Command ReverseClimber() {
-        return this.run(() -> setSpeed(-1));
+        return this.run(() -> setSpeed(-0.1));
     }
     public void stopMotors() {
         climberMotor1.set(0);
