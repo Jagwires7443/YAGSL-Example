@@ -40,7 +40,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
         elevatorMotor.configure(config, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
-        elevatorFollower.configure(config, ResetMode.kResetSafeParameters,
+        elevatorFollower.configure(followerConfig, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
     }
 

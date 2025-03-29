@@ -44,6 +44,7 @@ public class RobotContainer
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   final         CommandXboxController driverXbox = new CommandXboxController(0);
+  final         CommandGenericHID operatorButtons = new CommandGenericHID(1);
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem       drivebase  = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
                                                                                 "swerve/neo"));
@@ -144,31 +145,31 @@ public class RobotContainer
     //.whileTrue (climber.ReverseClimber())
     //.whileFalse(climber.setSpeed(0.0));
 
-  CommandGenericHID.class.cast(driverXbox).button(16)
+  operatorButtons.button(16)
     .onTrue(climber.setSpeed(1.0))
     .onFalse(climber.setSpeed(0.0));
 
-  CommandGenericHID.class.cast(driverXbox).button(15)
+    operatorButtons.button(15)
     .onTrue(climber.setSpeed(-1.0))
     .onFalse(climber.setSpeed(0.0));
 
-  CommandGenericHID.class.cast(driverXbox).button(14)
+    operatorButtons.button(13)
     .onTrue(flipper.setSpeed(1.0))
     .onFalse(flipper.setSpeed(0.0));
 
-  CommandGenericHID.class.cast(driverXbox).button(13)
+    operatorButtons.button(14)
     .onTrue(flipper.setSpeed(-1.0))
     .onFalse(flipper.setSpeed(0.0));
 
-    CommandGenericHID.class.cast(driverXbox).button(12)
+    operatorButtons.button(17)
     .onTrue(elevator.setSpeed(1.0))
     .onFalse(elevator.setSpeed(0.0));
 
-  CommandGenericHID.class.cast(driverXbox).button(11)
+    operatorButtons.button(18)
     .onTrue(elevator.setSpeed(-1.0))
     .onFalse(elevator.setSpeed(0.0));
 
-  CommandGenericHID.class.cast(driverXbox).button(10)
+    operatorButtons.button(19)
     .onTrue(elevator.setPosition(100.0));
 
 

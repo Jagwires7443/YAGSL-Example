@@ -29,7 +29,7 @@ public class Flipper extends SubsystemBase {
         // Set inverts.
         SparkFlexConfig config = new SparkFlexConfig();
 
-        config.inverted(true);
+        config.inverted(false);
         config.absoluteEncoder.inverted(false);
 
         flipperMotor.configure(config, ResetMode.kResetSafeParameters,
@@ -67,17 +67,21 @@ public class Flipper extends SubsystemBase {
 
     public void safeSet() {
         // Limit power.
-        if (speed < -0.05)
-            speed = -0.05;
-        if (speed > +0.05)
-            speed = +0.05;
+        if (speed < -0.25)
+            speed = -0.25;
+        if (speed > +0.25)
+            speed = +0.25;
+
+        double appliedSpeed = speed;
 
         // Limit range.
-        if (speed < 0.0 && currentPosition <= +0.0)
-            speed = 0.0;
-        if (speed > 0.0 && currentPosition >= +0.3)
-            speed = 0.0;
+        if (speed < 0.0 && currentPosition <= +0.2)
+            appliedSpeed = 0.0;
+        if (speed > 0.0 && currentPosition >= +0.85)
+            appliedSpeed = 0.0;
 
-        flipperMotor.set(speed);
+        // System.out.println("Flipper " + appliedSpeed + ", " + speed + ", " + currentPosition);
+
+        flipperMotor.set(appliedSpeed);
     }
 }

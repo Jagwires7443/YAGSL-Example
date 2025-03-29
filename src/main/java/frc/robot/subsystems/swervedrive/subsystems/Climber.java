@@ -37,10 +37,10 @@ public class Climber extends SubsystemBase {
         SparkFlexConfig config1 = new SparkFlexConfig();
         SparkFlexConfig config2 = new SparkFlexConfig();
 
-        config1.inverted(true);
-        config1.absoluteEncoder.inverted(false);
         config1.inverted(false);
-        config1.absoluteEncoder.inverted(true);
+        config1.absoluteEncoder.inverted(false);
+        config2.inverted(true);
+        config2.absoluteEncoder.inverted(true);
 
         climberMotor1.configure(config1, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
@@ -74,7 +74,7 @@ public class Climber extends SubsystemBase {
 
         // speed1 = controller1.calculate(currentPosition1);
         // speed2 = controller2.calculate(currentPosition2);
-
+        
         SmartDashboard.putNumber("Current Position1", currentPosition1);
         SmartDashboard.putNumber("Current Velocity1", currentVelocity1);
         SmartDashboard.putNumber("Current Position2", currentPosition2);
@@ -96,14 +96,16 @@ public class Climber extends SubsystemBase {
         if (speed2 > +0.05)
             speed2 = +0.05;
 
+        // System.out.println("climber " + speed1 + "/" + speed2 + ", " + currentPosition1 + "/" +currentPosition2);
+
         // Limit range.
-        if (speed1 < 0.0 && currentPosition1 <= +0.0)
+        if (speed1 < 0.0 && currentPosition1 <= +0.18)
             speed1 = 0.0;
-        if (speed1 > 0.0 && currentPosition1 >= +0.3)
+        if (speed1 > 0.0 && currentPosition1 >= +0.42)
             speed1 = 0.0;
-        if (speed2 < 0.0 && currentPosition2 <= +0.0)
+        if (speed2 < 0.0 && currentPosition2 <= +0.18)
             speed2 = 0.0;
-        if (speed2 > 0.0 && currentPosition2 >= +0.3)
+        if (speed2 > 0.0 && currentPosition2 >= +0.42)
             speed2 = 0.0;
 
         climberMotor1.set(speed1);
