@@ -35,7 +35,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void setSpeed(double speed) {
-    vortex1.set(speed);
+    vortex1.set(-speed);
     vortex2.set(speed);
   }
 

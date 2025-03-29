@@ -21,13 +21,15 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final SparkLimitSwitch lowerLimit = elevatorMotor.getReverseLimitSwitch();
 
     private final TrapezoidProfile.Constraints constraints =
-            new TrapezoidProfile.Constraints(0.5, 0.5);
+            new TrapezoidProfile.Constraints(10.0, 10.0);
     private final ProfiledPIDController controller =
-            new ProfiledPIDController(0.5, 0, 0, constraints);
+            new ProfiledPIDController(1.0, 0, 0, constraints);
 
     private double currentPosition = 0.0;
     private double currentVelocity = 0.0;
     private double speed = 0.0;
+    private boolean atLower = false;
+    private boolean atUpper = false;
 
     public ElevatorSubsystem() {
         // Set inverts.
@@ -52,7 +54,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public Command setPosition(double position) {
         return startRun(() -> {
-            controller.setGoal(position);
+        controller.setGoal(position);
         }, () -> {
         }).until(() -> {
             return controller.atGoal();
@@ -63,32 +65,38 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void periodic() {
         currentPosition = elevatorEncoder.getPosition();
         currentVelocity = elevatorEncoder.getVelocity();
+        atLower = lowerLimit.isPressed();
+        atUpper = upperLimit.isPressed();
 
-        if (currentPosition != 0.0 && lowerLimit.isPressed())
+        if (currentPosition != 0.0 && atLower)
             elevatorEncoder.setPosition(0.0);
 
-        // speed = controller.calculate(currentPosition);
+        speed = controller.calculate(currentPosition);
 
         SmartDashboard.putNumber("Current Position1", currentPosition);
         SmartDashboard.putNumber("Current Velocity1", currentVelocity);
         SmartDashboard.putNumber("Speed", speed);
+        SmartDashboard.putNumber("Elevator Motor Revolutions", currentPosition);
 
         safeSet();
     }
 
     public void safeSet() {
         // Limit power.
-        if (speed < -0.05)
-            speed = -0.05;
-        if (speed > +0.05)
-            speed = +0.05;
+        if (speed < -0.02)
+            speed = -0.02;
+        if (speed > +1.0)
+            speed = +1.0;
+
+        // System.out.println("Elevator " + atLower + ", " + atUpper + ", " + speed + ", " + currentPosition);
 
         // Limit range.
-        if (speed < 0.0 && lowerLimit.isPressed())
-            speed = 0.0;
-        if (speed > 0.0 && upperLimit.isPressed())
-            speed = 0.0;
+        // if (speed < 0.0 && lowerLimit.isPressed())
+        //     speed = 0.0;
+        // if (speed > 0.0 && upperLimit.isPressed())
+        //    speed = 0.0;
 
         elevatorMotor.set(speed);
     }
+    
 }

@@ -133,18 +133,11 @@ public class RobotContainer
   private void configureBindings()
   {
     driverXbox.rightBumper()
-    .whileTrue(intake.setIntakeSpeed(0.25));
+    .whileTrue(intake.setIntakeSpeed(0.35));
     driverXbox.rightBumper()
     .whileFalse(intake.setIntakeSpeed(0.0));
 
-    //driverXbox.a()
-    //.whileTrue(climber.setSpeed(0.5))
-    //.whileFalse(climber.setSpeed(0.0));
-
-    //driverXbox.b()
-    //.whileTrue (climber.ReverseClimber())
-    //.whileFalse(climber.setSpeed(0.0));
-
+  
   operatorButtons.button(16)
     .onTrue(climber.setSpeed(1.0))
     .onFalse(climber.setSpeed(0.0));
@@ -154,23 +147,41 @@ public class RobotContainer
     .onFalse(climber.setSpeed(0.0));
 
     operatorButtons.button(13)
-    .onTrue(flipper.setSpeed(1.0))
+    .onTrue(flipper.Coral())
     .onFalse(flipper.setSpeed(0.0));
 
     operatorButtons.button(14)
-    .onTrue(flipper.setSpeed(-1.0))
+    .onTrue(flipper.Stow())
     .onFalse(flipper.setSpeed(0.0));
 
-    operatorButtons.button(17)
-    .onTrue(elevator.setSpeed(1.0))
-    .onFalse(elevator.setSpeed(0.0));
+   // operatorButtons.button(17)
+   //.onTrue(elevator.setPosition(800.0));
+  
+   //operatorButtons.button(18)
+   //.onTrue(elevator.setPosition(0.0));
+   
+   
+  
 
-    operatorButtons.button(18)
-    .onTrue(elevator.setSpeed(-1.0))
-    .onFalse(elevator.setSpeed(0.0));
+      //driverXbox.a()
+    //.whileTrue(climber.setSpeed(0.5))
+    //.whileFalse(climber.setSpeed(0.0));
 
-    operatorButtons.button(19)
-    .onTrue(elevator.setPosition(100.0));
+    //driverXbox.b()
+    //.whileTrue (climber.ReverseClimber())
+    //.whileFalse(climber.setSpeed(0.0));
+
+    
+ 
+operatorButtons.button(18)
+.onTrue(elevator.setSpeed(1.0));
+operatorButtons.button(19)
+.onTrue(elevator.setSpeed(-0.3));
+
+
+
+// operatorButtons.button(19)
+// .onTrue(elevator.setPosition(100.0));
 
 
 
@@ -199,7 +210,7 @@ public class RobotContainer
   //   .whileTrue(flipper.POSITION_CORAL());
 
 
-    Command driveFieldOrientedDirectAngle      = drivebase.driveFieldOriented(driveDirectAngle);
+    Command driveFieldOrientedDirectngle      = drivebase.driveFieldOriented(driveDirectAngle);
     Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
     Command driveRobotOrientedAngularVelocity  = drivebase.driveFieldOriented(driveRobotOriented);
     Command driveSetpointGen = drivebase.driveWithSetpointGeneratorFieldRelative(
@@ -214,7 +225,7 @@ public class RobotContainer
       drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
     } else
     {
-      drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+      drivebase.setDefaultCommand(driveRobotOrientedAngularVelocity);
     }
 
     if (Robot.isSimulation())

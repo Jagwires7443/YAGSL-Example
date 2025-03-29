@@ -25,6 +25,9 @@ public class Flipper extends SubsystemBase {
     private double currentVelocity = 0.0;
     private double speed = 0.0;
 
+    public static final double POSITION_CORAL = 0.81; 
+    public static final double POSITION_STOW = 0.18;
+
     public Flipper() {
         // Set inverts.
         SparkFlexConfig config = new SparkFlexConfig();
@@ -56,7 +59,7 @@ public class Flipper extends SubsystemBase {
         currentPosition = flipperEncoder.getPosition();
         currentVelocity = flipperEncoder.getVelocity();
 
-        // speed = controller.calculate(currentPosition);
+        speed = controller.calculate(currentPosition);
 
         SmartDashboard.putNumber("Current Position1", currentPosition);
         SmartDashboard.putNumber("Current Velocity1", currentVelocity);
@@ -77,11 +80,15 @@ public class Flipper extends SubsystemBase {
         // Limit range.
         if (speed < 0.0 && currentPosition <= +0.2)
             appliedSpeed = 0.0;
-        if (speed > 0.0 && currentPosition >= +0.85)
+        if (speed > 0.0 && currentPosition >= +0.74)
             appliedSpeed = 0.0;
 
         // System.out.println("Flipper " + appliedSpeed + ", " + speed + ", " + currentPosition);
 
         flipperMotor.set(appliedSpeed);
     }
+
+    public Command Coral() { return setPosition(POSITION_CORAL);}
+
+    public Command Stow() { return setPosition(POSITION_STOW);}
 }
