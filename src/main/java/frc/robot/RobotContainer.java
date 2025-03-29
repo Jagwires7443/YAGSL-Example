@@ -168,6 +168,8 @@ public class RobotContainer
     .onTrue(elevator.setSpeed(-1.0))
     .onFalse(elevator.setSpeed(0.0));
 
+  CommandGenericHID.class.cast(driverXbox).button(10)
+    .onTrue(elevator.setPosition(100.0));
 
 
 
