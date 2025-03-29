@@ -62,10 +62,11 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (lowerLimit.isPressed())
-            elevatorEncoder.setPosition(0.0);
         currentPosition = elevatorEncoder.getPosition();
         currentVelocity = elevatorEncoder.getVelocity();
+
+        if (currentPosition != 0.0 && lowerLimit.isPressed())
+            elevatorEncoder.setPosition(0.0);
 
         // speed = controller.calculate(currentPosition);
 
