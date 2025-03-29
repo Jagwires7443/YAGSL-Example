@@ -35,7 +35,6 @@ public class ElevatorSubsystem extends SubsystemBase {
         SparkFlexConfig followerConfig = new SparkFlexConfig();
 
         config.inverted(false);
-        config.encoder.inverted(false);
 
         followerConfig.follow(elevatorMotor, true);
 

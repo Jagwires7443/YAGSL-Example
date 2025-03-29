@@ -38,9 +38,9 @@ public class Climber extends SubsystemBase {
         SparkFlexConfig config2 = new SparkFlexConfig();
 
         config1.inverted(true);
-        config1.encoder.inverted(false);
+        config1.absoluteEncoder.inverted(false);
         config1.inverted(false);
-        config1.encoder.inverted(true);
+        config1.absoluteEncoder.inverted(true);
 
         climberMotor1.configure(config1, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);

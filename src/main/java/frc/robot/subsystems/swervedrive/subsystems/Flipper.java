@@ -30,7 +30,7 @@ public class Flipper extends SubsystemBase {
         SparkFlexConfig config = new SparkFlexConfig();
 
         config.inverted(true);
-        config.encoder.inverted(false);
+        config.absoluteEncoder.inverted(false);
 
         flipperMotor.configure(config, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
