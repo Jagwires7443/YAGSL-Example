@@ -1,76 +1,83 @@
-
 package frc.robot.subsystems.swervedrive.subsystems;
+
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.spark.config.EncoderConfig;
-import com.revrobotics.spark.SparkBase;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 
 public class Flipper extends SubsystemBase {
+    private final SparkFlex flipperMotor = new SparkFlex(9, MotorType.kBrushless);
+    private final AbsoluteEncoder flipperEncoder = flipperMotor.getAbsoluteEncoder();
 
-    private final SparkFlex flipperMotor;
-    private final AbsoluteEncoder flipperEncoder;
+    private final TrapezoidProfile.Constraints constraints =
+            new TrapezoidProfile.Constraints(0.5, 0.5);
+    private final ProfiledPIDController controller =
+            new ProfiledPIDController(0.5, 0, 0, constraints);
 
-    public double getFlipperPosition() {
-    return flipperEncoder.getPosition();
-    }
+    private double currentPosition = 0.0;
+    private double currentVelocity = 0.0;
+    private double speed = 0.0;
 
     public Flipper() {
-        flipperMotor = new SparkFlex(9, MotorType.kBrushless);
-        flipperEncoder = flipperMotor.getAbsoluteEncoder();
-  
-    
-      }
+        // Set inverts.
+        SparkFlexConfig config = new SparkFlexConfig();
 
+        config.inverted(true);
+        config.encoder.inverted(false);
 
-    // Constants for arm control
-    private static final double kP = 0.1;
-    private static final double kI = 0.0;
-    private static final double kD = 0.0;
-    private static final double kPositionConversionFactor = 1.0;
-
-    public static final double POSITION_STOW = 0.0;
-    public static final double POSITION_CORAL = 50.0; // Placeholder, needs configuring!
-
-    public void periodic() {
-        // Get the current position and velocity from the encoder
-        double currentPosition = flipperEncoder.getPosition();
-        double currentVelocity = flipperEncoder.getVelocity();
-    
-        // Display the current position and velocity on the SmartDashboard
-        SmartDashboard.putNumber("Current Position", currentPosition);
-        SmartDashboard.putNumber("Current Velocity", currentVelocity);
+        flipperMotor.configure(config, ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
     }
-    public Flipper(int motorID) {
-        //Initialize the Sparkflex motor
-        flipperMotor = new SparkFlex (motorID, MotorType.kBrushless);
-   
-    //Initialize the encoder
-    flipperEncoder = flipperMotor.getAbsoluteEncoder();
 
-    //Optionally configure the encoder
-    EncoderConfig encoderConfig = new EncoderConfig()
-    .positionConversionFactor(kPositionConversionFactor * 360.0);} // Example: 1 rotation = 360 degrees
-    
-//Method to move the flipper to a specific position
-public Command setFlipperPosition(double position){
-    flipperMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
-    return this.run(() -> setFlipperPosition(position));
-}
+    public Command setSpeed(double speed) {
+        return runOnce(() -> {
+            this.speed = speed;
+        });
+    }
 
-public Command stopArm() {
-    flipperMotor.stopMotor();
-    return new InstantCommand(() -> flipperMotor.stopMotor(), this);
-}
-public Command POSITION_STOW() {
-    return setFlipperPosition(POSITION_STOW);
-}
-public Command POSITION_CORAL() {
-    return setFlipperPosition(POSITION_CORAL);
-}
-}
+    public Command setPosition(double position) {
+        return startRun(() -> {
+            controller.setGoal(position);
+        }, () -> {
+        }).until(() -> {
+            return controller.atGoal();
+        });
+    }
 
+    @Override
+    public void periodic() {
+        currentPosition = flipperEncoder.getPosition();
+        currentVelocity = flipperEncoder.getVelocity();
+
+        // speed = controller.calculate(currentPosition);
+
+        SmartDashboard.putNumber("Current Position1", currentPosition);
+        SmartDashboard.putNumber("Current Velocity1", currentVelocity);
+        SmartDashboard.putNumber("Speed", speed);
+
+        safeSet();
+    }
+
+    public void safeSet() {
+        // Limit power.
+        if (speed < -0.05)
+            speed = -0.05;
+        if (speed > +0.05)
+            speed = +0.05;
+
+        // Limit range.
+        if (speed < 0.0 && currentPosition <= +0.0)
+            speed = 0.0;
+        if (speed > 0.0 && currentPosition >= +0.3)
+            speed = 0.0;
+
+        flipperMotor.set(speed);
+    }
+}

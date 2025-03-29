@@ -1,269 +1,94 @@
 package frc.robot.subsystems.swervedrive.subsystems;
 
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkLimitSwitch;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-//import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLimitSwitch;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.ClosedLoopConfig;
-import com.revrobotics.spark.config.EncoderConfig;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkFlexConfig;
-
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.Timer;
- 
+
 public class ElevatorSubsystem extends SubsystemBase {
-    // Leader motor.
-    public static final SparkFlex elevatorMotor = new SparkFlex(Constants.OperatorConstants.kElevatorLeaderCanId, MotorType.kBrushless);
-    public static final SparkClosedLoopController controller = elevatorMotor.getClosedLoopController();
+    private final SparkFlex elevatorMotor = new SparkFlex(10, MotorType.kBrushless);
+    private final SparkFlex elevatorFollower = new SparkFlex(11, MotorType.kBrushless);
     private final RelativeEncoder elevatorEncoder = elevatorMotor.getEncoder();
-    
-  
-    public static final double POSITION_BOTTOM = 0.0;
-    public static final double POSITION_TOP = 30.0;
+    private final SparkLimitSwitch upperLimit = elevatorMotor.getForwardLimitSwitch();
+    private final SparkLimitSwitch lowerLimit = elevatorMotor.getReverseLimitSwitch();
 
-    // Follower motor.
-    public static final SparkFlex followerMotor = new SparkFlex(Constants.OperatorConstants.kElevatorFollowerCanId, MotorType.kBrushless);
+    private final TrapezoidProfile.Constraints constraints =
+            new TrapezoidProfile.Constraints(0.5, 0.5);
+    private final ProfiledPIDController controller =
+            new ProfiledPIDController(0.5, 0, 0, constraints);
 
-    // Define gear ratio.
-    private final double gearRatio = 50.0;
-    // Encoder conversion: 22 teeth * 0.25 in/tooth * 2 stages = 11 inches per revolution, divided by gear ratio.
-    private final double encoderFactor = (22.0 * 0.25 * 2.0) / gearRatio;
-    // Free speed [in/sec]: (6784 RPM / 60) * encoderFactor.
-    private final double freeSpeed = (6784.0 / 60.0) * encoderFactor;
-
-    public static final SparkLimitSwitch forwardLimitSwitch = elevatorMotor.getForwardLimitSwitch();
-    public static final SparkLimitSwitch reverseLimitSwitch = elevatorMotor.getReverseLimitSwitch();
-
-    // Motion profile variables.
-    private TrapezoidProfile motionProfile = null;
-    private final Timer profileTimer = new Timer();
-    private TrapezoidProfile.State targetState = new TrapezoidProfile.State();
-    private TrapezoidProfile.State currentState = new TrapezoidProfile.State();
-    private double previousPosition;
-
-    // Consolidate max velocity & acceleration
-    private double maxVel = 24.0;
-    private double maxAccl = 16.0;
-
-    // Same with P, I, D, and gF
-    private double kP = 2.0;
-    private double kI = 0;
-    private double kD = 0.0;
-    private double gF = 1.0;
-    private double kV = 16.0;
-    public Command killElevator;
-
-
+    private double currentPosition = 0.0;
+    private double currentVelocity = 0.0;
+    private double speed = 0.0;
 
     public ElevatorSubsystem() {
-        // Set SmartDashboard default tuning values.
-        SmartDashboard.putNumber("Gravity FF", gF);   // kG: Voltage to hold position.
-        SmartDashboard.putNumber("Elevator kP", kP);
-        SmartDashboard.putNumber("Elevator kI", kI);
-        SmartDashboard.putNumber("Elevator kD", kD);
-        SmartDashboard.putNumber("maxVel", maxVel);
-        SmartDashboard.putNumber("maxAcc", maxAccl);
-        SmartDashboard.putBoolean("Overwrite Elevator Config", false);
-        
-        // Initialize encoder and timer.
-        elevatorEncoder.setPosition(0);
-        profileTimer.reset();
-        profileTimer.start();
-        // Configure the encoder
-
-
-        // Build leader motor configuration.
-        EncoderConfig encoderConfig = new EncoderConfig()
-                                        .positionConversionFactor(encoderFactor)
-                                        .velocityConversionFactor(encoderFactor / 60.0);
-        ClosedLoopConfig closedLoopConfig = new ClosedLoopConfig().p(kP).i(kI).d(kD);
-        SparkFlexConfig leaderConfig = new SparkFlexConfig();
-        leaderConfig.apply(encoderConfig);
-        leaderConfig.apply(closedLoopConfig);
-        // Set idle mode via setter.
-        leaderConfig.idleMode(SparkBaseConfig.IdleMode.kBrake);
-        
-        elevatorMotor.configure(
-            leaderConfig,
-            SparkBase.ResetMode.kNoResetSafeParameters,
-            SparkBase.PersistMode.kPersistParameters
-        );
-
-        // Build follower motor configuration.
+        // Set inverts.
+        SparkFlexConfig config = new SparkFlexConfig();
         SparkFlexConfig followerConfig = new SparkFlexConfig();
-        // Set inversion in the config.
-        followerConfig.inverted(true);
-        followerMotor.configure(
-            followerConfig,
-            SparkBase.ResetMode.kNoResetSafeParameters,
-            SparkBase.PersistMode.kPersistParameters
-        );
+
+        config.inverted(false);
+        config.encoder.inverted(false);
+
+        followerConfig.follow(elevatorMotor, true);
+
+        elevatorMotor.configure(config, ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
+        elevatorFollower.configure(config, ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
+    }
+
+    public Command setSpeed(double speed) {
+        return runOnce(() -> {
+            this.speed = speed;
+        });
+    }
+
+    public Command setPosition(double position) {
+        return startRun(() -> {
+            controller.setGoal(position);
+        }, () -> {
+        }).until(() -> {
+            return controller.atGoal();
+        });
     }
 
     @Override
     public void periodic() {
-        if (SmartDashboard.getBoolean("Overwrite Elevator Config", false)) {
-            ClosedLoopConfig closedLoopConfig = new ClosedLoopConfig().p(kP).i(kI).d(kD);
-            SparkFlexConfig newLeaderConfig = new SparkFlexConfig();
-            newLeaderConfig.apply(closedLoopConfig);
-            elevatorMotor.configure(
-                newLeaderConfig,
-                SparkBase.ResetMode.kNoResetSafeParameters,
-                SparkBase.PersistMode.kNoPersistParameters
-            );
-            SmartDashboard.putBoolean("Overwrite Elevator Config", false);
-        }
+        if (lowerLimit.isPressed())
+            elevatorEncoder.setPosition(0.0);
+        currentPosition = elevatorEncoder.getPosition();
+        currentVelocity = elevatorEncoder.getVelocity();
 
-        if (motionProfile != null) {
-            // Calculate the time delta since the last update.
-            double dt = profileTimer.get();
-            profileTimer.reset();
-            // Use actual elapsed time (dt) for trajectory calculation.
-            currentState = motionProfile.calculate(dt, currentState, targetState);
+        // speed = controller.calculate(currentPosition);
 
-            SmartDashboard.putNumber("Target Position", targetState.position);
-            SmartDashboard.putNumber("Target Velocity", targetState.velocity);
-            SmartDashboard.putNumber("Profile Position", currentState.position);
-            SmartDashboard.putNumber("Profile Velocity", currentState.velocity);
-            SmartDashboard.putNumber("Current Position", elevatorEncoder.getPosition());
-            SmartDashboard.putNumber("Current Velocity", elevatorEncoder.getVelocity());
-            SmartDashboard.putNumber("Position Error", currentState.position - elevatorEncoder.getPosition());
-            SmartDashboard.putNumber("Velocity Error", currentState.velocity - elevatorEncoder.getVelocity());
+        SmartDashboard.putNumber("Current Position1", currentPosition);
+        SmartDashboard.putNumber("Current Velocity1", currentVelocity);
+        SmartDashboard.putNumber("Speed", speed);
 
-            double direction = Math.signum(currentState.velocity); // +1 for up, -1 for down, 0 for stationary
-            double arbFF = (direction * gF) + (kV * (currentState.velocity / freeSpeed));
-            controller.setReference(
-                currentState.position,
-                SparkBase.ControlType.kPosition,
-                ClosedLoopSlot.kSlot0,
-                arbFF,
-                SparkClosedLoopController.ArbFFUnits.kVoltage
-            );
-            // Mirror the leader's command to the follower.
-            double leaderCommand = elevatorMotor.get();
-            followerMotor.set(leaderCommand);
-        }
-    }
-     public void setSpeed(double speed){
-        followerMotor.set(speed);
-        elevatorMotor.set(-speed);
-     }
-     public Command setElevatorPosition(double position) {
-        elevatorMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
-        if (position < POSITION_BOTTOM || position > POSITION_TOP) {
-            System.out.println("Position out of bounds!");
-            
-        }
-    elevatorMotor.getClosedLoopController().setReference(position, SparkBase.ControlType.kPosition);
-        return killElevator;
-}
-    public Command setElevatorSpeed(double speed) {
-            motionProfile = null;
-        if ((forwardLimitSwitch.isPressed() && speed > 0) ||
-            (reverseLimitSwitch.isPressed() && speed < 0)) {
-           return this.run(() -> stopElevator());
-        } else {
-            return this.run(() -> setSpeed(speed));
-        }
-                
+        safeSet();
     }
 
-    public void stopElevator() {
-        elevatorMotor.set(0);
-        //followerMotor.set(0);
-        targetState = new TrapezoidProfile.State(getHeight(), 0); // Hold current position.
-        motionProfile = null;
-    }
+    public void safeSet() {
+        // Limit power.
+        if (speed < -0.05)
+            speed = -0.05;
+        if (speed > +0.05)
+            speed = +0.05;
 
-    public double getHeight() {
-        return elevatorEncoder.getPosition();
-    }
+        // Limit range.
+        if (speed < 0.0 && lowerLimit.isPressed())
+            speed = 0.0;
+        if (speed > 0.0 && upperLimit.isPressed())
+            speed = 0.0;
 
-    // Modified setHeight() method to hold at the limit switch position.
-    public void setHeight(double targetHeight) {
-        // If the forward limit switch is hit and the command is upward, hold the current position.
-        if (forwardLimitSwitch.isPressed() && targetHeight > getHeight()) {
-            targetHeight = getHeight();
-        }
-        // Similarly, if the reverse limit switch is hit and the command is downward, hold the current position.
-        if (reverseLimitSwitch.isPressed() && targetHeight < getHeight()) {
-            targetHeight = getHeight();
-        }
-        System.out.println("Moving elevator to new height: " + targetHeight);
-        targetState = new TrapezoidProfile.State(targetHeight, 0);
-        currentState = new TrapezoidProfile.State(getHeight(), elevatorEncoder.getVelocity());
-        // Determine direction and adjust constraints
-        motionProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(maxVel, maxAccl));
-        profileTimer.reset();
-    }
-
-    public edu.wpi.first.wpilibj2.command.Command goToHeight(double targetHeight) {
-        return new edu.wpi.first.wpilibj2.command.FunctionalCommand(
-            () -> {
-                targetState = new TrapezoidProfile.State(targetHeight, 0);
-                currentState = new TrapezoidProfile.State(getHeight(), elevatorEncoder.getVelocity());
-                motionProfile = new TrapezoidProfile(
-                    new TrapezoidProfile.Constraints(
-                        Math.min(SmartDashboard.getNumber("maxVel", maxVel), maxVel),
-                        Math.min(SmartDashboard.getNumber("maxAcc", maxAccl), maxAccl)
-                    )
-                );
-                profileTimer.reset();
-            },
-            () -> {},
-            interrupted -> {},
-            () -> Math.abs(getHeight() - targetHeight) < 0.01,
-            this
-        );
-    }
-
-    public Command returnToPreviousPosition() {
-        return new InstantCommand(() -> setHeight(previousPosition), this);
-    }
-
-    public void killElevator() {
-        elevatorMotor.stopMotor();
-        followerMotor.stopMotor();
-        targetState = new TrapezoidProfile.State(getHeight(), 0);
-        motionProfile = null;
-    }
-
-    public void onDisable() {
-        motionProfile = null;
-        elevatorMotor.stopMotor();
-        followerMotor.stopMotor();
-    }
-
-    public double getVelocity() {
-        return elevatorEncoder.getVelocity();
-    }
-      //PRESET POSITIONS
-    //These preset positions are not final and will be changed! Use with care!
-    //I am assuming that the conversion is in rotations. Example: 1 rotation = 1 unit
- public Command POSITION_L1() {
-    return setElevatorPosition(10.0); //Replace 10.0 with the desired position
- }
-    public Command POSITION_L2() {
-        return setElevatorPosition(20.0); //Replace 20.0 with the desired position
-    }
-    public Command POSITION_L3() {
-        return setElevatorPosition(30.0); //Replace 30.0 with the desired position
-    }
-    public Command POSITION_L4() {
-        return setElevatorPosition(40.0); //Replace 40.0 with the desired position
+        elevatorMotor.set(speed);
     }
 }
-   
-
-    

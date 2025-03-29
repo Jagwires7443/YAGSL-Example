@@ -15,12 +15,10 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -30,11 +28,7 @@ import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.swervedrive.subsystems.Climber;
 import frc.robot.subsystems.swervedrive.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.swervedrive.subsystems.Flipper;
-/* 
-import frc.robot.subsystems.swervedrive.subsystems.ElevatorSubsystem;
-*/
 import frc.robot.subsystems.swervedrive.subsystems.Intake;
-import frc.robot.subsystems.swervedrive.subsystems.RunIntakeCommand;
 
 import java.io.File;
 import swervelib.SwerveInputStream;
@@ -125,9 +119,6 @@ public class RobotContainer
 
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
-
-    new Trigger(intake::isBeamBroken)
-    .onTrue(new RunIntakeCommand(intake, 0.8, 0.6));
   }
 
   /**
@@ -152,35 +143,59 @@ public class RobotContainer
     //driverXbox.b()
     //.whileTrue (climber.ReverseClimber())
     //.whileFalse(climber.setSpeed(0.0));
- 
-    //Preset elevator positions
 
   CommandGenericHID.class.cast(driverXbox).button(16)
-    .whileTrue(elevator.POSITION_L1());
- 
+    .onTrue(climber.setSpeed(1.0))
+    .onFalse(climber.setSpeed(0.0));
 
-  CommandGenericHID.class.cast(driverXbox).button(5)
-  .whileTrue(elevator.POSITION_L2());
- 
+  CommandGenericHID.class.cast(driverXbox).button(15)
+    .onTrue(climber.setSpeed(-1.0))
+    .onFalse(climber.setSpeed(0.0));
 
-  CommandGenericHID.class.cast(driverXbox).button(10)
-  .whileTrue(elevator.POSITION_L3());
-  
+  CommandGenericHID.class.cast(driverXbox).button(14)
+    .onTrue(flipper.setSpeed(1.0))
+    .onFalse(flipper.setSpeed(0.0));
+
+  CommandGenericHID.class.cast(driverXbox).button(13)
+    .onTrue(flipper.setSpeed(-1.0))
+    .onFalse(flipper.setSpeed(0.0));
+
+    CommandGenericHID.class.cast(driverXbox).button(12)
+    .onTrue(elevator.setSpeed(1.0))
+    .onFalse(elevator.setSpeed(0.0));
 
   CommandGenericHID.class.cast(driverXbox).button(11)
-  .whileTrue(elevator.POSITION_L4());
+    .onTrue(elevator.setSpeed(-1.0))
+    .onFalse(elevator.setSpeed(0.0));
+
+
+
+
+    //Preset elevator positions
+
+  // CommandGenericHID.class.cast(driverXbox).button(16)
+  //   .whileTrue(elevator.POSITION_L1());
+ 
+
+  // CommandGenericHID.class.cast(driverXbox).button(5)
+  // .whileTrue(elevator.POSITION_L2());
+ 
+
+  // CommandGenericHID.class.cast(driverXbox).button(10)
+  // .whileTrue(elevator.POSITION_L3());
+  
+
+  // CommandGenericHID.class.cast(driverXbox).button(11)
+  // .whileTrue(elevator.POSITION_L4());
 
 
   //Preset flipper positions
-    driverXbox.x()
-    .whileTrue(flipper.POSITION_STOW());
-    driverXbox.y()
-    .whileTrue(flipper.POSITION_CORAL());
+  //   driverXbox.x()
+  //   .whileTrue(flipper.POSITION_STOW());
+  //   driverXbox.y()
+  //   .whileTrue(flipper.POSITION_CORAL());
 
 
-
-    
-    
     Command driveFieldOrientedDirectAngle      = drivebase.driveFieldOriented(driveDirectAngle);
     Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
     Command driveRobotOrientedAngularVelocity  = drivebase.driveFieldOriented(driveRobotOriented);
