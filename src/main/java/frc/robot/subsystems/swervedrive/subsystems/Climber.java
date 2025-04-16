@@ -1,3 +1,5 @@
+/* 
+
 package frc.robot.subsystems.swervedrive.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
@@ -19,11 +21,11 @@ public class Climber extends SubsystemBase {
     private final AbsoluteEncoder climber2Encoder = climberMotor2.getAbsoluteEncoder();
 
     private final TrapezoidProfile.Constraints constraints =
-            new TrapezoidProfile.Constraints(0.5, 0.5);
+            new TrapezoidProfile.Constraints(4, 1);
     private final ProfiledPIDController controller1 =
-            new ProfiledPIDController(0.5, 0, 0, constraints);
+            new ProfiledPIDController(1.3, 0, 0.0, constraints);
     private final ProfiledPIDController controller2 =
-            new ProfiledPIDController(0.5, 0, 0, constraints);
+            new ProfiledPIDController(1.3, 0, 0.0, constraints);
 
     private double currentPosition1 = 0.0;
     private double currentVelocity1 = 0.0;
@@ -31,6 +33,7 @@ public class Climber extends SubsystemBase {
     private double currentVelocity2 = 0.0;
     private double speed1 = 0.0;
     private double speed2 = 0.0;
+    double gff = 0.7;
 
     public Climber() {
         // Set inverts.
@@ -87,28 +90,29 @@ public class Climber extends SubsystemBase {
 
     public void safeSet() {
         // Limit power.
-        if (speed1 < -0.05)
-            speed1 = -0.05;
-        if (speed1 > +0.05)
-            speed1 = +0.05;
-        if (speed2 < -0.05)
-            speed2 = -0.05;
-        if (speed2 > +0.05)
-            speed2 = +0.05;
+        if (speed1 < -0.2)
+            speed1 = -0.2;
+        if (speed1 > +0.2)
+            speed1 = +0.2;
+        if (speed2 < -0.2)
+            speed2 = -0.2;
+        if (speed2 > +0.2)
+            speed2 = +0.2;
 
         // System.out.println("climber " + speed1 + "/" + speed2 + ", " + currentPosition1 + "/" +currentPosition2);
 
         // Limit range.
         if (speed1 < 0.0 && currentPosition1 <= +0.18)
             speed1 = 0.0;
-        if (speed1 > 0.0 && currentPosition1 >= +0.42)
+        if (speed1 > 0.0 && currentPosition1 >= +0.51)
             speed1 = 0.0;
-        if (speed2 < 0.0 && currentPosition2 <= +0.18)
+        if (speed2 < 0.0 && currentPosition2 <= +0.15)
             speed2 = 0.0;
-        if (speed2 > 0.0 && currentPosition2 >= +0.42)
+        if (speed2 > 0.0 && currentPosition2 >= +0.51)
             speed2 = 0.0;
 
         climberMotor1.set(speed1);
         climberMotor2.set(speed2);
     }
 }
+*/

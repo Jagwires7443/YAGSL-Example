@@ -10,6 +10,7 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -30,16 +31,28 @@ public class Intake extends SubsystemBase {
     vortex2.configure(config2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
-  @Override
-  public void periodic() {
-  }
+@Override
+public void periodic() {
+  SmartDashboard.putBoolean("Beam Broken", isBeamBroken());
+}
+
+public Command stopMotorOnBeamBreak() {
+  return edu.wpi.first.wpilibj2.command.Commands.run(() -> {
+      SmartDashboard.putBoolean("Beam Broken (Command)", isBeamBroken());
+      if (isBeamBroken()) {
+          stopMotors(); // Stop the motors
+          SmartDashboard.putString("Motor Status", "Stopped");
+      }
+  }, this).andThen(edu.wpi.first.wpilibj2.command.Commands.waitSeconds(2.0));
+}
 
   public void setSpeed(double speed) {
     vortex1.set(-speed);
     vortex2.set(speed);
-  }
+    }
 
-  public void stopMotors() {
+ 
+    public void stopMotors() {
     vortex1.set(0);
     vortex2.set(0);
   }
@@ -48,8 +61,7 @@ public class Intake extends SubsystemBase {
     return this.run(() -> setSpeed(speed));
   }
 
-  // Method to check if the beam is broken
   public boolean isBeamBroken() {
-    return !beamBreakSensor.get(); // Assuming 'false' means that the beam is broken
-  }
+    return !beamBreakSensor.get(); // Assuming 'false' means the beam is broken
+}
 }

@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
@@ -19,6 +21,14 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 @SuppressWarnings("unused")
 public class Robot extends TimedRobot
 {
+    // Create a DigitalOutput object for the LED connected to DIO port 5
+    
+
+  
+
+    
+
+
 
   private static Robot   instance;
   private Command m_autonomousCommand;
@@ -46,6 +56,12 @@ public class Robot extends TimedRobot
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+    CameraServer.startAutomaticCapture();
+
+            // The LED should be off initially when the robot is disabled
+           
+          
+      
 
     // Create a timer to disable motor brake a few seconds after disable.  This will let the robot stop
     // immediately when disabled, but then also let it be pushed more 
@@ -83,6 +99,7 @@ public class Robot extends TimedRobot
     m_robotContainer.setMotorBrake(true);
     disabledTimer.reset();
     disabledTimer.start();
+   
   }
 
   @Override
@@ -93,6 +110,9 @@ public class Robot extends TimedRobot
       m_robotContainer.setMotorBrake(false);
       disabledTimer.stop();
       disabledTimer.reset();
+              // Turn the LED off when the robot is disabled
+            
+
     }
   }
 
@@ -142,6 +162,8 @@ public class Robot extends TimedRobot
   @Override
   public void teleopPeriodic()
   {
+ 
+  
   }
 
   @Override

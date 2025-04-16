@@ -25,9 +25,10 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
-import frc.robot.subsystems.swervedrive.subsystems.Climber;
+//import frc.robot.subsystems.swervedrive.subsystems.Climber;
 import frc.robot.subsystems.swervedrive.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.swervedrive.subsystems.Flipper;
+import frc.robot.subsystems.swervedrive.subsystems.HoldAndReturnCommand;
 import frc.robot.subsystems.swervedrive.subsystems.Intake;
 
 import java.io.File;
@@ -52,7 +53,10 @@ public class RobotContainer
   private Intake intake = new Intake();
   private ElevatorSubsystem elevator = new ElevatorSubsystem();
   private Flipper flipper = new Flipper();
-  private Climber climber = new Climber();
+  
+  //private Climber climber = new Climber();
+
+
   
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
@@ -62,7 +66,7 @@ public class RobotContainer
                                                                 () -> driverXbox.getLeftX() * -1)
                                                             .withControllerRotationAxis(driverXbox::getRightX)
                                                             .deadband(OperatorConstants.DEADBAND)
-                                                            .scaleTranslation(0.8)
+                                                            .scaleTranslation(0.6)
                                                             .allianceRelativeControl(true);
 
   /**
@@ -114,9 +118,12 @@ public class RobotContainer
   public RobotContainer()
   {
     // Configure the trigger bindings
+    
+    configureBindings();
+    intake.setDefaultCommand(intake.stopMotorOnBeamBreak());
+
     configureBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
-    NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -133,19 +140,18 @@ public class RobotContainer
   private void configureBindings()
   {
     driverXbox.rightBumper()
-    .whileTrue(intake.setIntakeSpeed(0.35));
+    .whileTrue(intake.setIntakeSpeed(0.30));
     driverXbox.rightBumper()
     .whileFalse(intake.setIntakeSpeed(0.0));
+    
+  //operatorButtons.button(16)
+    //.onTrue(climber.setSpeed(1.0))
+    //.onFalse(climber.setSpeed(0.0));
 
-  
-  operatorButtons.button(16)
-    .onTrue(climber.setSpeed(1.0))
-    .onFalse(climber.setSpeed(0.0));
-
-    operatorButtons.button(15)
-    .onTrue(climber.setSpeed(-1.0))
-    .onFalse(climber.setSpeed(0.0));
-
+    //operatorButtons.button(15)
+    //.onTrue(climber.setSpeed(-1.0))
+    //.onFalse(climber.setSpeed(0.0));
+    
     operatorButtons.button(13)
     .onTrue(flipper.Coral())
     .onFalse(flipper.setSpeed(0.0));
@@ -154,60 +160,22 @@ public class RobotContainer
     .onTrue(flipper.Stow())
     .onFalse(flipper.setSpeed(0.0));
 
-   // operatorButtons.button(17)
-   //.onTrue(elevator.setPosition(800.0));
+    //driverXbox.a()
+    //.onTrue(elevator.setPosition(ElevatorSubsystem.POSITION_INTAKE));
+
+     
+driverXbox.x()
+.onTrue(elevator.manualMoveUp(0.75))
+.onFalse(elevator.manualMoveUp(0.0));
+
+driverXbox.y()
+.onTrue(elevator.manualMoveDown(0.85))
+.onFalse(elevator.manualMoveDown(0.0));
+
+ {
   
-   //operatorButtons.button(18)
-   //.onTrue(elevator.setPosition(0.0));
-   
-   
   
-
-      //driverXbox.a()
-    //.whileTrue(climber.setSpeed(0.5))
-    //.whileFalse(climber.setSpeed(0.0));
-
-    //driverXbox.b()
-    //.whileTrue (climber.ReverseClimber())
-    //.whileFalse(climber.setSpeed(0.0));
-
-    
- 
-operatorButtons.button(18)
-.onTrue(elevator.setSpeed(1.0));
-operatorButtons.button(19)
-.onTrue(elevator.setSpeed(-0.3));
-
-
-
-// operatorButtons.button(19)
-// .onTrue(elevator.setPosition(100.0));
-
-
-
-    //Preset elevator positions
-
-  // CommandGenericHID.class.cast(driverXbox).button(16)
-  //   .whileTrue(elevator.POSITION_L1());
- 
-
-  // CommandGenericHID.class.cast(driverXbox).button(5)
-  // .whileTrue(elevator.POSITION_L2());
- 
-
-  // CommandGenericHID.class.cast(driverXbox).button(10)
-  // .whileTrue(elevator.POSITION_L3());
-  
-
-  // CommandGenericHID.class.cast(driverXbox).button(11)
-  // .whileTrue(elevator.POSITION_L4());
-
-
-  //Preset flipper positions
-  //   driverXbox.x()
-  //   .whileTrue(flipper.POSITION_STOW());
-  //   driverXbox.y()
-  //   .whileTrue(flipper.POSITION_CORAL());
+  }
 
 
     Command driveFieldOrientedDirectngle      = drivebase.driveFieldOriented(driveDirectAngle);

@@ -17,9 +17,9 @@ public class Flipper extends SubsystemBase {
     private final AbsoluteEncoder flipperEncoder = flipperMotor.getAbsoluteEncoder();
 
     private final TrapezoidProfile.Constraints constraints =
-            new TrapezoidProfile.Constraints(0.5, 0.5);
+            new TrapezoidProfile.Constraints(68, 48);
     private final ProfiledPIDController controller =
-            new ProfiledPIDController(0.5, 0, 0, constraints);
+            new ProfiledPIDController(1.55, 0, 0, constraints);
 
     private double currentPosition = 0.0;
     private double currentVelocity = 0.0;
@@ -27,6 +27,8 @@ public class Flipper extends SubsystemBase {
 
     public static final double POSITION_CORAL = 0.81; 
     public static final double POSITION_STOW = 0.18;
+    public static final double POSITION_L4 = 0.70;  //unused
+    public static final double POSITION_BARGE = 0.95; //unused
 
     public Flipper() {
         // Set inverts.
@@ -70,17 +72,17 @@ public class Flipper extends SubsystemBase {
 
     public void safeSet() {
         // Limit power.
-        if (speed < -0.25)
-            speed = -0.25;
-        if (speed > +0.25)
-            speed = +0.25;
+        if (speed < -1.0)
+            speed = -1.0;
+        if (speed > +1.0)
+            speed = +1.0;
 
         double appliedSpeed = speed;
 
         // Limit range.
-        if (speed < 0.0 && currentPosition <= +0.2)
+        if (speed < 0.0 && currentPosition <= +0.18)
             appliedSpeed = 0.0;
-        if (speed > 0.0 && currentPosition >= +0.74)
+        if (speed > 0.0 && currentPosition >= +0.75)
             appliedSpeed = 0.0;
 
         // System.out.println("Flipper " + appliedSpeed + ", " + speed + ", " + currentPosition);
